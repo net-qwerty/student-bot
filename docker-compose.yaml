@@ -1,0 +1,10 @@
+version: '3.1'
+
+services:
+  students-bot:
+    build: .
+    env_file:
+      - .env
+    volumes: 
+      - ./bot/templates:/app/templates
+    restart: always

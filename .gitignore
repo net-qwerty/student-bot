@@ -27,5 +27,3 @@ env.bak/
 venv.bak/
 
 # dev environment
-docker-compose.yaml
-
