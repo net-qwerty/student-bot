@@ -8,3 +8,14 @@ services:
     volumes: 
       - ./bot/templates:/app/templates
     restart: always
+  pg_db:
+    image: postgres
+    restart: always
+    environment:
+      - POSTGRES_USER=student_bot
+      - POSTGRES_PASSWORD=student_bot 
+      - POSTGRES_DB=student_bot
+    volumes:
+      - ./db_data:/var/lib/postgresql/data
+    ports:
+      - ${POSTGRES_PORT:-5432}:5432
