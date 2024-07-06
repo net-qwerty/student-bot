@@ -13,68 +13,85 @@ headman_router.message.filter(ChatTypeFilter(["private"]))
 env = Environment(loader=FileSystemLoader("bot/templates/"), lstrip_blocks=True)
 
 HEADMAN_KB = get_keyboard(
-    "Запись",
-    "Семестры",
-    "Предметы",
+    "Информация",
+    "Материалы",
+    "Требования",
+    "Настройки",
+    "Переключить семестр",
     placeholder="Выберите",
     sizes=(2,),
 )
 
-RECORD_KB = get_keyboard(
-    "Создать",
-    "Добавить",
-    "Удалить",
-    "Меню админа⏫",
-    placeholder="Выберите действие с записями",
-    sizes=(2,),
-)
+# HEADMAN_KB = get_keyboard(
+#     "Запись",
+#     "Семестры",
+#     "Предметы",
+#     placeholder="Выберите",
+#     sizes=(2,),
+# )
 
-SEMESTER_KB = get_keyboard(
-    "Создать",
-    "Выбрать текущий",
-    "Добавить",
-    "Удалить",
-    "Меню админа⏫",
-    placeholder="Выберите действие с семестром",
-    sizes=(2,),
-)
+# RECORD_KB = get_keyboard(
+#     "Создать",
+#     "Добавить",
+#     "Удалить",
+#     "Меню админа⏫",
+#     placeholder="Выберите действие с записями",
+#     sizes=(2,),
+# )
 
-LESSON_KB = get_keyboard(
-    "Создать",
-    "Добавить",
-    "Удалить предметы",
-    "Меню админа⏫",
-    placeholder="Выберите действие с предметом",
-    sizes=(2,),
-)
+# SEMESTER_KB = get_keyboard(
+#     "Создать",
+#     "Выбрать текущий",
+#     "Добавить",
+#     "Удалить",
+#     "Меню админа⏫",
+#     placeholder="Выберите действие с семестром",
+#     sizes=(2,),
+# )
 
-@headman_router.message(or_f(Command("admin"), (F.text.lower().contains("админ"))))
-async def start_main(message: types.Message):
+# LESSON_KB = get_keyboard(
+#     "Создать",
+#     "Добавить",
+#     "Удалить предметы",
+#     "Меню админа⏫",
+#     placeholder="Выберите действие с предметом",
+#     sizes=(2,),
+# )
+
+# @headman_router.message(or_f(Command("admin"), (F.text.lower().contains("админ"))))
+# async def start_main(message: types.Message):
+#     """
+#     Main admin
+#     """
+#     await message.answer("Главное меню", reply_markup=HEADMAN_KB)
+
+
+# @headman_router.message(or_f(Command("record"),(F.text.lower().contains("запись"))))
+# async def admin_features(message: types.Message):
+#     """
+#     Main record
+#     """
+#     await message.answer("Меню управления записями", reply_markup=RECORD_KB)
+
+
+# @headman_router.message(or_f(Command("semestr"),(F.text.lower().contains("семестры"))))
+# async def admin_features(message: types.Message):
+#     """
+#     Main semestr
+#     """
+#     await message.answer("Меню управления семестрами", reply_markup=SEMESTER_KB)
+
+
+# @headman_router.message(or_f(Command("lesson"),(F.text.lower().contains("предметы"))))
+# async def admin_features(message: types.Message):
+#     """
+#     Main lesson
+#     """
+#     await message.answer("Меню управления предметами", reply_markup=LESSON_KB)
+
+@headman_router.message(or_f(Command("headman"), (F.text.lower().contains("староста"))))
+async def headman_main(message: types.Message):
     """
     Main admin
     """
-    await message.answer("Главное меню", reply_markup=HEADMAN_KB)
-
-
-@headman_router.message(or_f(Command("record"),(F.text.lower().contains("запись"))))
-async def admin_features(message: types.Message):
-    """
-    Main record
-    """
-    await message.answer("Меню управления записями", reply_markup=RECORD_KB)
-
-
-@headman_router.message(or_f(Command("semestr"),(F.text.lower().contains("семестры"))))
-async def admin_features(message: types.Message):
-    """
-    Main semestr
-    """
-    await message.answer("Меню управления семестрами", reply_markup=SEMESTER_KB)
-
-
-@headman_router.message(or_f(Command("lesson"),(F.text.lower().contains("предметы"))))
-async def admin_features(message: types.Message):
-    """
-    Main lesson
-    """
-    await message.answer("Меню управления предметами", reply_markup=LESSON_KB)
+    await message.answer("Меню", reply_markup=HEADMAN_KB)
