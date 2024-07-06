@@ -35,72 +35,11 @@ SUBJECTS_KB = get_keyboard(
     sizes=(2,),
 )
 
-# HEADMAN_KB = get_keyboard(
-#     "Запись",
-#     "Семестры",
-#     "Предметы",
-#     placeholder="Выберите",
-#     sizes=(2,),
-# )
+SKIP_KB = get_keyboard(
+    ["Отменить","Пропустить"],
+    sizes=(2,),
+)
 
-# RECORD_KB = get_keyboard(
-#     "Создать",
-#     "Добавить",
-#     "Удалить",
-#     "Меню админа⏫",
-#     placeholder="Выберите действие с записями",
-#     sizes=(2,),
-# )
-
-# SEMESTER_KB = get_keyboard(
-#     "Создать",
-#     "Выбрать текущий",
-#     "Добавить",
-#     "Удалить",
-#     "Меню админа⏫",
-#     placeholder="Выберите действие с семестром",
-#     sizes=(2,),
-# )
-
-# LESSON_KB = get_keyboard(
-#     "Создать",
-#     "Добавить",
-#     "Удалить предметы",
-#     "Меню админа⏫",
-#     placeholder="Выберите действие с предметом",
-#     sizes=(2,),
-# )
-
-# @headman_router.message(or_f(Command("admin"), (F.text.lower().contains("админ"))))
-# async def start_main(message: types.Message):
-#     """
-#     Main admin
-#     """
-#     await message.answer("Главное меню", reply_markup=HEADMAN_KB)
-
-
-# @headman_router.message(or_f(Command("record"),(F.text.lower().contains("запись"))))
-# async def admin_features(message: types.Message):
-#     """
-#     Main record
-#     """
-#     await message.answer("Меню управления записями", reply_markup=RECORD_KB)
-
-
-# @headman_router.message(or_f(Command("semestr"),(F.text.lower().contains("семестры"))))
-# async def admin_features(message: types.Message):
-#     """
-#     Main semestr
-#     """
-#     await message.answer("Меню управления семестрами", reply_markup=SEMESTER_KB)
-
-
-# @headman_router.message(or_f(Command("lesson"),(F.text.lower().contains("предметы"))))
-# async def admin_features(message: types.Message):
-#     """
-#     Main lesson
-#     """
-#     await message.answer("Меню управления предметами", reply_markup=LESSON_KB)
 class AddOrChangePost(StatesGroup):
     # Шаги состояний
     text = State()
@@ -133,25 +72,36 @@ async def headman_main(message: types.Message):
     await message.answer("Меню", reply_markup=HEADMAN_KB)
 
 
-# Становимся в состояние ожидания ввода text
-# @headman_router.message(StateFilter(None), F.text == "Добавить товар")
-# async def add_post(message: types.Message, state: FSMContext):
-#     await message.answer(
-#         "Введите название товара", reply_markup=types.ReplyKeyboardRemove()
-#     )
-#     await state.set_state(AddOrChangePost.name)
-
-
-
 @headman_router.message(StateFilter(None), F.text == "Информация")
-async def headman_subject(message: types.Message, state: FSMContext):
+async def headman_information(message: types.Message, state: FSMContext):
 
     await message.answer("Предметы", reply_markup=SUBJECTS_KB)
 
 
-@headman_router.message()
-async def echo(message: types.Message):
-    if message.text in subjects:
-        await message.answer("Текст сообщения соответствует категории")
-    else:
-        pass
+@headman_router.message(StateFilter(None), F.text.in_(set(subjects)))
+async def headman_subjects(message: types.Message, state: FSMContext):
+    await state.update_data(subject=message.text)
+    await state.set_state(AddOrChangePost.subject)
+    data = await state.get_data()
+    print(data)
+    await message.answer("Введите текст поста", reply_markup=types.ReplyKeyboardRemove())
+
+
+# Ловим данные для состояния subject и потом меняем состояние на text
+@headman_router.message(AddOrChangePost.subject, F.text)
+async def add_text(message: types.Message, state: FSMContext):
+    await state.update_data(text=message.text)
+    await state.set_state(AddOrChangePost.text)
+    data = await state.get_data()
+    print(data)
+    await message.answer("Введите дедлайн в формате: 01.01.2001")
+
+# Ловим данные для состояние text и потом меняем состояние на deadline
+@headman_router.message(AddOrChangePost.text, F.text)
+async def add_deadline(message: types.Message, state: FSMContext):
+    await state.update_data(deadline=message.text)
+    await state.set_state(AddOrChangePost.deadline)
+    data = await state.get_data() 
+    await message.answer(f"Вы ввели:\n{data["subject"]}\n{data["text"]}\n{data["deadline"]}", reply_markup=HEADMAN_KB)
+
+    await state.clear()
