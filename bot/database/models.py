@@ -28,14 +28,14 @@ class Subject(Base):
     semestr: Mapped['Semestr'] = relationship(backref='subject')
 
 
-
 class Semestr(Base):
     __tablename__ = 'semestr'
 
+    number: Mapped[int] = mapped_column(nullable=False)
     subjects: Mapped[Subject] = relationship(backref='semestr')
-    news: Mapped[Post] = relationship(backref='semestr')
     group_id: Mapped[int] = mapped_column(ForeignKey('group.id', ondelete='CASCADE'), nullable=False)
     group: Mapped['Group'] = relationship(backref='semestr')
+
 
 class Group(Base):
     __tablename__ = 'group'
