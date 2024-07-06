@@ -13,18 +13,33 @@ student_router.message.filter(ChatTypeFilter(["private"]))
 
 env = Environment(loader=FileSystemLoader("bot/templates/"), lstrip_blocks=True)
 
-STUDENTS_KB = get_keyboard(
-    "Выбрать Записи",
-    "Предметы",
+STUDENT_KB = get_keyboard(
+    "Информация",
+    "Материалы",
+    "Требования",
+    "Переключить семестр",
     placeholder="Выберите",
     sizes=(2,),
 )
 
-@student_router.message(or_f((CommandStart()), Command("menu"), (F.text.lower().contains("menu"))))
-async def start_main(message: types.Message):
-    """
-    Main menu
-    """
-    await message.answer("Главное меню", reply_markup=STUDENTS_KB)
+# STUDENTS_KB = get_keyboard(
+#     "Выбрать Записи",
+#     "Предметы",
+#     placeholder="Выберите",
+#     sizes=(2,),
+# )
 
 
+# @student_router.message(or_f((CommandStart()), Command("menu"), (F.text.lower().contains("menu"))))
+# async def start_main(message: types.Message):
+#     """
+#     Main menu
+#     """
+#     await message.answer("Главное меню", reply_markup=STUDENTS_KB)
+
+@student_router.message(or_f(Command("student"), (F.text.lower().contains("студент"))))
+async def student_main(message: types.Message):
+    """
+    Main student
+    """
+    await message.answer("Меню", reply_markup=STUDENT_KB)
