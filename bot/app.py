@@ -28,9 +28,11 @@ dp.include_router(student_router)
 
 async def on_startup(bot):
     print("Bot started")
-    run_param = False
-    if run_param:
-        await drop_db()
+    #run_param = False
+    # if run_param:
+    #     await drop_db()
+    # Пока всегда дропаем бд при перезапуске (для отладки)
+    await drop_db()
 
     await create_db()
 
