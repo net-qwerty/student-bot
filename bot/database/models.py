@@ -15,6 +15,16 @@ class Post(Base):
     text: Mapped[str] = mapped_column(Text, nullable=False)
     deadline: Mapped[DateTime] = mapped_column(DateTime, nullable=True)
 
+class Users(Base):
+    __tablename__ = 'users'
+
+    telegram_id: Mapped[int] = mapped_column(primary_key=True, nullable=False)
+    username: Mapped[str] = mapped_column(String(255), nullable=False)
+    full_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    headman: Mapped[bool] = mapped_column(default=False)
+    groupe: Mapped[str] = mapped_column(String(255), nullable=False)
+    codeName: Mapped[str] = mapped_column(nullable=False)
+
 
 class Subject(Base):
     __tablename__ = 'subject'
