@@ -12,7 +12,7 @@ from database.engine import create_db, drop_db, session_maker
 from aiogram import Bot, Dispatcher
 from aiogram.client.bot import DefaultBotProperties
 from aiogram.enums import ParseMode
-from handlers.admin_private import admin_router
+# from handlers.admin_private import admin_router
 from handlers.student import student_router
 from handlers.headman import headman_router
 from handlers.user_private import user_private_router
@@ -21,7 +21,7 @@ bot = Bot(token=settings.TOKEN, default=DefaultBotProperties(parse_mode=ParseMod
 
 dp = Dispatcher()
 
-dp.include_router(admin_router)
+# dp.include_router(admin_router)
 dp.include_router(user_private_router)
 dp.include_router(headman_router)
 dp.include_router(student_router)
