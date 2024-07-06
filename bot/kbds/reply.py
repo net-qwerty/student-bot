@@ -4,7 +4,7 @@ from aiogram.utils.keyboard import ReplyKeyboardBuilder
 
 
 def get_keyboard(
-    *btns: str,
+    btns: list[str],
     placeholder: str = None,
     request_contact: int = None,
     request_location: int = None,

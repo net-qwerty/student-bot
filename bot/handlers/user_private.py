@@ -7,8 +7,8 @@ user_private_router = Router()
 user_private_router.message.filter(ChatTypeFilter(["private"]))
 
 AUTH_KB = get_keyboard(
-    "Староста",
-    "Студент",
+    ["Староста",
+    "Студент"],
     placeholder="Выберите роль",
     sizes=(2,),
 )
