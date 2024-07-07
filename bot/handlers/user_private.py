@@ -48,8 +48,6 @@ async def start_main(message: types.Message):
     """
     await message.answer("Привет!\nЭтот бот предназначен для помощи в учебе.\nВыберите роль, под которой хотите авторизоваться", reply_markup=AUTH_KB)
 
-# Регистрация студента
-
 class RegistrationStudent(StatesGroup):
     code_name_group = State()
     callback = State()

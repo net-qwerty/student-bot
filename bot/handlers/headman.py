@@ -1,3 +1,4 @@
+import datetime
 import settings
 from aiogram import Bot, F, Router, types
 from aiogram.filters import Command, CommandStart, StateFilter, or_f
@@ -8,6 +9,13 @@ from jinja2 import Environment, FileSystemLoader
 
 from kbds.inline import get_callback_btns
 from kbds.reply import get_keyboard, AUTH_KB
+
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from database.orm_query import (
+    orm_add_post,
+    orm_get_subject_all
+)
 
 headman_router = Router()
 headman_router.message.filter(ChatTypeFilter(["private"]))
@@ -23,20 +31,14 @@ HEADMAN_KB = get_keyboard(
     sizes=(2,),
 )
 
-# список будет собираться динамически
-subjects  = ["АБД",
-    "ИКСС",
-    "МПиС",
-    "Питон"]
-    
-    
-SUBJECTS_KB = get_keyboard(
-    ["Общее"] + subjects + ["Назад"],
-    sizes=(2,),
-)
 
 SKIP_KB = get_keyboard(
     ["Отменить","Пропустить"],
+    sizes=(2,),
+)
+
+CANCEL_KB = get_keyboard(
+    ["Отменить"],
     sizes=(2,),
 )
 
@@ -45,7 +47,6 @@ class AddOrChangePost(StatesGroup):
     text = State()
     deadline = State()
     subject_id = State()
-    subject = State()
     material = State()
 
     post_for_change = None
@@ -64,40 +65,112 @@ class AddOrChangePost(StatesGroup):
         "AddOrChangePost:material": "Приложиите материал",
     }
 
-@headman_router.message(or_f(Command("headman"), (F.text.lower().contains("староста"))))
+@headman_router.message(or_f(Command("headman"), F.text.lower().contains("староста")))
 async def headman_main(message: types.Message):
-    """
-    Main admin
-    """
     await message.answer("Выберите следующий шаг", reply_markup=HEADMAN_KB)
 
 
-@headman_router.message(F.text == "Информация")
-async def headman_information(message: types.Message):
+# сборка массива предметов
+async def find_subjects(session: AsyncSession):
+    subjects = []
+    for s in await orm_get_subject_all(session):
+        subjects.append(s.name)
+    return subjects  
 
-    await message.answer("Выберите предмет", reply_markup=SUBJECTS_KB)
 
+# @headman_router.message(F.text == "Информация")
+# async def headman_information(message: types.Message, session: AsyncSession):
+    
+#     subs = await find_subjects(session)
 
-@headman_router.message(StateFilter(None), F.text.in_(set(subjects)))
-async def headman_subjects(message: types.Message, state: FSMContext):
-    await state.update_data(subject=message.text)
-    await state.set_state(AddOrChangePost.subject)
-    await message.answer("Введите текст поста", reply_markup=types.ReplyKeyboardRemove())
+#     SUBJECT_KB = get_keyboard(
+#         subs + ["Назад"],
+#         sizes=(2,),
+#         )
+#     await message.answer("Выберите предмет", reply_markup=SUBJECT_KB)
+
+@headman_router.message(F.text == "Материалы")
+async def headman_information(message: types.Message, session: AsyncSession):
+    
+    subs = await find_subjects(session)
+
+    SUBJECT_KB = get_keyboard(
+        subs + ["Назад"],
+        sizes=(2,),
+        )
+    await message.answer("Выберите предмет", reply_markup=SUBJECT_KB)
+
+@headman_router.message(or_f(F.text.lower().contains("назад"), F.text.lower().contains("отменить")))
+async def back_information(message: types.Message, state: FSMContext):
+    await state.clear()
+    await message.answer("Выберите следующий шаг", reply_markup=HEADMAN_KB)
+
+# ------------------------ FSM для материалов
+
+@headman_router.message(StateFilter(None), F.text)
+async def headman_subjects(message: types.Message, state: FSMContext, session: AsyncSession):
+    subs = await find_subjects(session)
+    if (message.text in subs):
+        for s in await orm_get_subject_all(session):
+            if(s.name == message.text):
+                await state.update_data(subject_id=s.id)
+                await state.set_state(AddOrChangePost.subject_id)
+        
+        await message.answer("Введите описание материала", reply_markup=CANCEL_KB)
+    else:
+        # print('ТЫ ДУРАК')
+        pass
 
 
 # Ловим данные для состояния subject и потом меняем состояние на text
-@headman_router.message(AddOrChangePost.subject, F.text)
+@headman_router.message(AddOrChangePost.subject_id, F.text)
 async def add_text(message: types.Message, state: FSMContext):
     await state.update_data(text=message.text)
     await state.set_state(AddOrChangePost.text)
-    await message.answer("Введите дедлайн в формате: 01.01.2001")
+#     await message.answer("Введите дедлайн в формате: 01.01.2001")
 
-# Ловим данные для состояние text и потом меняем состояние на deadline
-@headman_router.message(AddOrChangePost.text, F.text)
-async def add_deadline(message: types.Message, state: FSMContext):
-    await state.update_data(deadline=message.text)
-    await state.set_state(AddOrChangePost.deadline)
+# # Ловим данные для состояния text и потом меняем состояние на deadline
+# @headman_router.message(AddOrChangePost.text, F.text)
+# async def add_deadline(message: types.Message, state: FSMContext):
+#     await state.update_data(deadline=datetime.datetime.strptime(message.text, '%d.%m.%Y'))
+#     await state.set_state(AddOrChangePost.deadline)
+    await message.answer("Приложите фото или файл", reply_markup=SKIP_KB)
+
+
+# Ловим данные для ссостояния deadline и потом меняем состояние на material
+@headman_router.message(AddOrChangePost.text, or_f(F.photo, F.document, F.text))
+async def add_material(message: types.Message, state: FSMContext, session: AsyncSession):
+
+
+    if message.document:
+        await state.update_data(material=message.document.file_id)
+    elif message.photo:
+        await state.update_data(material=message.photo[-1].file_id)
+    elif message.text == "Пропустить":
+        pass
+    else:
+        await state.clear()
+        await message.answer("Выберите следующий шаг", reply_markup=HEADMAN_KB)
+        return
+    await state.set_state(AddOrChangePost.material)
+
+
     data = await state.get_data() 
-    await message.answer(f"Вы ввели:\n{data["subject"]}\n{data["text"]}\n{data["deadline"]}", reply_markup=HEADMAN_KB)
 
+    print(data)
+    # await message.answer(f"Вы ввели:\n{data["subject"]}\n{data["text"]}\n{data["deadline"]}\n{data["material"]}", reply_markup=HEADMAN_KB)
+
+    
+    try:
+        await orm_add_post(session, data)
+        
+        await message.answer(
+            f"<strong> Запись добавлена!</strong>",
+            reply_markup=HEADMAN_KB
+        )
+    except Exception as e:
+        await message.answer(
+            f"Ошибка: \n{str(e)}\nОбратись к разработчикам",
+            reply_markup=HEADMAN_KB,
+        )
     await state.clear()

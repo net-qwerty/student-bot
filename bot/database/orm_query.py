@@ -40,13 +40,29 @@ async def orm_get_semestr_name(session: AsyncSession, number: None, group_id: No
 
 # ADD
 async def orm_add_post(session: AsyncSession, data: dict):
+    print("0")
+    if (('deadline' in data) & ('material' in data)):
+        print("1")
+        d = data["deadline"]
+        m = data["material"]
+    elif (('deadline' in data) & ('material' not in data)):
+        print("2")
+        d = data["deadline"]
+        m = None
+    elif (('deadline' not in data) & ('material' in data)):
+        print("3")
+        d = None
+        m = data["material"]
+    else:
+        print("4")
+        d = None
+        m = None
     obj = Post(
-        text=data["text"],
-        deadline=data["deadline"],
-        subject_id=data["subject_id"],
-        subject=data["subject"],
-        material=data["material"],
-    )
+            text=data["text"],
+            deadline = d,
+            subject_id=data["subject_id"],
+            material = m
+        )
     session.add(obj)
     await session.commit()
 
@@ -81,24 +97,23 @@ async def orm_add_group(session: AsyncSession, data: dict):
     await session.commit()
 
 
-
-# ADD ALL
-async def orm_get_post(session: AsyncSession):
+# GET ALL
+async def orm_get_post_all(session: AsyncSession):
     query = select(Post)
     result = await session.execute(query)
     return result.scalars().all()
 
-async def orm_get_subject(session: AsyncSession):
+async def orm_get_subject_all(session: AsyncSession):
     query = select(Subject)
     result = await session.execute(query)
     return result.scalars().all()
 
-async def orm_get_semestr(session: AsyncSession):
+async def orm_get_semestr_all(session: AsyncSession):
     query = select(Semestr)
     result = await session.execute(query)
     return result.scalars().all()
 
-async def orm_get_group(session: AsyncSession):
+async def orm_get_group_all(session: AsyncSession):
     query = select(Group)
     result = await session.execute(query)
     return result.scalars().all()
@@ -134,7 +149,6 @@ async def orm_update_post(session: AsyncSession, post_id: int, data):
         text=data["text"],
         deadline=data["deadline"],
         subject_id=data["subject_id"],
-        subject=data["subject"],
         material=data["material"],
         )
     await session.execute(query)
@@ -144,7 +158,6 @@ async def orm_update_subject(session: AsyncSession, subject_id: int, data):
     query = update(Subject).where(Subject.id == subject_id).values(
         name=data["name"],
         semestr_id=data["semestr_id"],
-        semestr=data["semestr"],
         )
     await session.execute(query)
     await session.commit()
@@ -154,7 +167,6 @@ async def orm_update_semestr(session: AsyncSession, semestr_id: int, data):
         number=data["number"],
         subjects=data["subjects"],
         group_id=data["group_id"],
-        group=data["group"],
         )
     await session.execute(query)
     await session.commit()
