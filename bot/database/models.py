@@ -57,7 +57,7 @@ class Group(Base):
     __tablename__ = 'group'
     
     name: Mapped[str] = mapped_column(String(30), nullable=False)
-    codeName: Mapped[int] = mapped_column(nullable=False)
+    codeName: Mapped[str] = mapped_column(String(150), nullable=False)
     headmanID: Mapped[int] = mapped_column(nullable=False)
     notificationInterval: Mapped[int] = mapped_column(nullable=True) #в днях
 

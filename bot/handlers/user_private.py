@@ -28,12 +28,12 @@ async def start_main(message: types.Message):
     """
     await message.answer("Привет!\nЭтот бот предназначен для помощи в учебе.\nВыберите роль, под которой хотите авторизоваться", reply_markup=AUTH_KB)
 
-# @user_private_router.message(Command("id"))
-# async def menu_cmd(message: types.Message):
-#     """
-#     Get ID user
-#     """
-#     await message.answer(f"Ваш ID: <code>{message.from_user.id}</code>")
+@user_private_router.message(Command("id"))
+async def menu_cmd(message: types.Message):
+    """
+    Get ID user
+    """
+    await message.answer(f"Ваш ID: <code>{message.from_user.id}</code>")
 
 
 class RegistrationStudent(StatesGroup):
