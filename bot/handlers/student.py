@@ -21,10 +21,10 @@ student_router.message.filter(ChatTypeFilter(["private"]))
 env = Environment(loader=FileSystemLoader("bot/templates/"), lstrip_blocks=True)
 
 STUDENT_KB = get_keyboard(
-    "Информация",
+    ["Информация",
     "Материалы",
     "Требования",
-    "Переключить семестр",
+    "Переключить семестр"],
     placeholder="Выберите",
     sizes=(2,),
 )
