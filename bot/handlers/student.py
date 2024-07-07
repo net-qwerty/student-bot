@@ -12,8 +12,6 @@ from kbds.inline import get_callback_btns
 from kbds.reply import get_keyboard, AUTH_KB
 
 
-from middlewares.auth_student import AuthStudent
-
 student_router = Router()
 student_router.message.filter(ChatTypeFilter(["private"]))
 

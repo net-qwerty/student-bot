@@ -19,22 +19,15 @@ class Post(Base):
     subject: Mapped['Subject'] = relationship(backref='post')
     material: Mapped[str] = mapped_column(String(150), nullable=True)
 
+
 class Users(Base):
     __tablename__ = 'users'
 
     telegram_id: Mapped[int] = mapped_column(nullable=False)
-    # избыточно
-    # username: Mapped[str] = mapped_column(String(255), nullable=False)
-    # избыточно
-    # full_name: Mapped[str] = mapped_column(String(255), nullable=False)
-    # к группе привязывается id старосты, инф хранится в ГРУППЕ
-    # headman: Mapped[bool] = mapped_column(default=False)
-    
-    # внешний ключ: пользователь - группа
+    username: Mapped[str] = mapped_column(String(255), nullable=False)
+    full_name: Mapped[str] = mapped_column(String(255), nullable=False)
     group_id: Mapped[int] = mapped_column(ForeignKey('group.id', ondelete='CASCADE'), nullable=False)
     group: Mapped['Group'] = relationship(backref='users')
-    # codeName общий для всей группы, хранится в ГРУППЕ
-    # codeName: Mapped[str] = mapped_column(nullable=False)
 
 
 class Subject(Base):
@@ -57,7 +50,8 @@ class Group(Base):
     __tablename__ = 'group'
     
     name: Mapped[str] = mapped_column(String(30), nullable=False)
-    codeName: Mapped[int] = mapped_column(nullable=False)
+    codeName: Mapped[str] = mapped_column(nullable=False)
     headmanID: Mapped[int] = mapped_column(nullable=False)
     notificationInterval: Mapped[int] = mapped_column(nullable=True) #в днях
+    currentSemester: Mapped[int] = mapped_column(nullable=True)
 
