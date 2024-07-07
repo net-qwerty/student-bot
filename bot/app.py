@@ -5,6 +5,7 @@ import logging
 import settings
 
 from middlewares.db import DataBaseSession
+from middlewares.auth_student import AuthStudent
 
 from database.engine import create_db, drop_db, session_maker
 
@@ -20,6 +21,8 @@ from handlers.user_private import user_private_router
 bot = Bot(token=settings.TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 
 dp = Dispatcher()
+
+student_router.message.middleware(AuthStudent(session_pool=session_maker))
 
 # dp.include_router(admin_router)
 dp.include_router(user_private_router)
