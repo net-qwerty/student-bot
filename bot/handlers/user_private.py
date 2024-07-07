@@ -41,10 +41,10 @@ class RegistrationStudent(StatesGroup):
     callback = State()
 
 STUDENT_KB = get_keyboard(
-    "Информация",
+    ["Информация",
     "Материалы",
     "Требования",
-    "Переключить семестр",
+    "Переключить семестр"],
     placeholder="Выберите",
     sizes=(2,),
 )

@@ -28,8 +28,7 @@ def get_keyboard(
     return keyboard.adjust(*sizes).as_markup(resize_keyboard=True, input_field_placeholder=placeholder)
 
 AUTH_KB = get_keyboard(
-    "Староста",
-    "Студент",
+    ["Староста", "Студент"],
     placeholder="Выберите роль",
     sizes=(2,),
 )

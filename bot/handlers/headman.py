@@ -69,21 +69,19 @@ async def headman_main(message: types.Message):
     """
     Main admin
     """
-    await message.answer("Меню", reply_markup=HEADMAN_KB)
+    await message.answer("Выберите следующий шаг", reply_markup=HEADMAN_KB)
 
 
-@headman_router.message(StateFilter(None), F.text == "Информация")
-async def headman_information(message: types.Message, state: FSMContext):
+@headman_router.message(F.text == "Информация")
+async def headman_information(message: types.Message):
 
-    await message.answer("Предметы", reply_markup=SUBJECTS_KB)
+    await message.answer("Выберите предмет", reply_markup=SUBJECTS_KB)
 
 
 @headman_router.message(StateFilter(None), F.text.in_(set(subjects)))
 async def headman_subjects(message: types.Message, state: FSMContext):
     await state.update_data(subject=message.text)
     await state.set_state(AddOrChangePost.subject)
-    data = await state.get_data()
-    print(data)
     await message.answer("Введите текст поста", reply_markup=types.ReplyKeyboardRemove())
 
 
@@ -92,8 +90,6 @@ async def headman_subjects(message: types.Message, state: FSMContext):
 async def add_text(message: types.Message, state: FSMContext):
     await state.update_data(text=message.text)
     await state.set_state(AddOrChangePost.text)
-    data = await state.get_data()
-    print(data)
     await message.answer("Введите дедлайн в формате: 01.01.2001")
 
 # Ловим данные для состояние text и потом меняем состояние на deadline

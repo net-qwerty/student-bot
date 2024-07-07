@@ -17,7 +17,7 @@ class Post(Base):
     deadline: Mapped[DateTime] = mapped_column(DateTime, nullable=True)
     subject_id: Mapped[int] = mapped_column(ForeignKey('subject.id', ondelete='CASCADE'), nullable=False)
     subject: Mapped['Subject'] = relationship(backref='post')
-    material: Mapped['str'] = mapped_column(String(150), nullable=True)
+    material: Mapped[str] = mapped_column(String(150), nullable=True)
 
 class Users(Base):
     __tablename__ = 'users'
@@ -42,7 +42,6 @@ class Semestr(Base):
     __tablename__ = 'semestr'
 
     number: Mapped[int] = mapped_column(nullable=False)
-    subjects: Mapped[Subject] = relationship(backref='semestr')
     group_id: Mapped[int] = mapped_column(ForeignKey('group.id', ondelete='CASCADE'), nullable=False)
     group: Mapped['Group'] = relationship(backref='semestr')
 
