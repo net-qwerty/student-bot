@@ -9,8 +9,7 @@ from jinja2 import Environment, FileSystemLoader
 
 
 from kbds.inline import get_callback_btns
-from kbds.reply import get_keyboard, AUTH_KB
-
+from kbds.reply import get_keyboard
 
 from middlewares.auth_student import AuthStudent
 

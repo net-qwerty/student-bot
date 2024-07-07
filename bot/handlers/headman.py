@@ -7,7 +7,7 @@ from filters.chat_types import ChatTypeFilter
 from jinja2 import Environment, FileSystemLoader
 
 from kbds.inline import get_callback_btns
-from kbds.reply import get_keyboard, AUTH_KB
+from kbds.reply import get_keyboard
 
 headman_router = Router()
 headman_router.message.filter(ChatTypeFilter(["private"]))

@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from filters.chat_types import ChatTypeFilter
 
-from kbds.reply import get_keyboard, AUTH_KB
+from kbds.reply import get_keyboard
 
 
 from database.orm_query import (
@@ -20,6 +20,13 @@ from database.orm_query import (
 
 user_private_router = Router()
 user_private_router.message.filter(ChatTypeFilter(["private"]))
+
+AUTH_KB = get_keyboard(
+    ["Староста",
+    "Студент"],
+    placeholder="Выберите роль",
+    sizes=(2,),
+)
 
 @user_private_router.message(or_f((CommandStart()), Command("start"), (F.text.lower().contains("start"))))
 async def start_main(message: types.Message):
@@ -40,14 +47,6 @@ class RegistrationStudent(StatesGroup):
     code_name = State()
     callback = State()
 
-STUDENT_KB = get_keyboard(
-    "Информация",
-    "Материалы",
-    "Требования",
-    "Переключить семестр",
-    placeholder="Выберите",
-    sizes=(2,),
-)
 
 @user_private_router.callback_query(StateFilter(None), F.data.startswith("registration"))
 async def registration_student(callback: types.CallbackQuery, state: FSMContext):
