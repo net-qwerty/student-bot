@@ -22,12 +22,19 @@ class Post(Base):
 class Users(Base):
     __tablename__ = 'users'
 
-    telegram_id: Mapped[int] = mapped_column(primary_key=True, nullable=False)
-    username: Mapped[str] = mapped_column(String(255), nullable=False)
-    full_name: Mapped[str] = mapped_column(String(255), nullable=False)
-    headman: Mapped[bool] = mapped_column(default=False)
-    groupe: Mapped[str] = mapped_column(String(255), nullable=False)
-    codeName: Mapped[str] = mapped_column(nullable=False)
+    telegram_id: Mapped[int] = mapped_column(nullable=False)
+    # избыточно
+    # username: Mapped[str] = mapped_column(String(255), nullable=False)
+    # избыточно
+    # full_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    # к группе привязывается id старосты, инф хранится в ГРУППЕ
+    # headman: Mapped[bool] = mapped_column(default=False)
+    
+    # внешний ключ: пользователь - группа
+    group_id: Mapped[int] = mapped_column(ForeignKey('group.id', ondelete='CASCADE'), nullable=False)
+    group: Mapped['Group'] = relationship(backref='users')
+    # codeName общий для всей группы, хранится в ГРУППЕ
+    # codeName: Mapped[str] = mapped_column(nullable=False)
 
 
 class Subject(Base):
