@@ -31,7 +31,6 @@ HEADMAN_KB = get_keyboard(
     sizes=(2,),
 )
 
-
 SKIP_KB = get_keyboard(
     ["Отменить","Пропустить"],
     sizes=(2,),
@@ -48,16 +47,9 @@ class AddOrChangePost(StatesGroup):
     deadline = State()
     subject_id = State()
     material = State()
+    type = State()
 
     post_for_change = None
-
-    # texts = {
-    #     "AddProduct:name": "Введите название заново:",
-    #     "AddProduct:description": "Введите описание заново:",
-    #     "AddProduct:category": "Выберите категорию  заново ⬆️",
-    #     "AddProduct:price": "Введите стоимость заново:",
-    #     "AddProduct:image": "Этот стейт последний, поэтому...",
-    # }
 
     texts = {
         "AddOrChangePost:text": "Введите текст поста:",
@@ -69,7 +61,6 @@ class AddOrChangePost(StatesGroup):
 async def headman_main(message: types.Message):
     await message.answer("Выберите следующий шаг", reply_markup=HEADMAN_KB)
 
-
 # сборка массива предметов
 async def find_subjects(session: AsyncSession):
     subjects = []
@@ -77,28 +68,24 @@ async def find_subjects(session: AsyncSession):
         subjects.append(s.name)
     return subjects  
 
+# -------------------------------------------------------------
 
-# @headman_router.message(F.text == "Информация")
-# async def headman_information(message: types.Message, session: AsyncSession):
-    
-#     subs = await find_subjects(session)
-
-#     SUBJECT_KB = get_keyboard(
-#         subs + ["Назад"],
-#         sizes=(2,),
-#         )
-#     await message.answer("Выберите предмет", reply_markup=SUBJECT_KB)
-
-@headman_router.message(F.text == "Материалы")
-async def headman_information(message: types.Message, session: AsyncSession):
+@headman_router.message(StateFilter(None), or_f(F.text.lower().contains("информация"), F.text.lower().contains("материалы"), F.text.lower().contains("требования")))
+async def headman_information(message: types.Message, state: FSMContext, session: AsyncSession):
     
     subs = await find_subjects(session)
-
+    if (message.text.lower() == "требования"):
+        subs.remove("Общее")
+   
     SUBJECT_KB = get_keyboard(
         subs + ["Назад"],
         sizes=(2,),
         )
+    await state.update_data(type=message.text)
+    await state.set_state(AddOrChangePost.type)
     await message.answer("Выберите предмет", reply_markup=SUBJECT_KB)
+
+
 
 @headman_router.message(or_f(F.text.lower().contains("назад"), F.text.lower().contains("отменить")))
 async def back_information(message: types.Message, state: FSMContext):
@@ -107,7 +94,7 @@ async def back_information(message: types.Message, state: FSMContext):
 
 # ------------------------ FSM для материалов
 
-@headman_router.message(StateFilter(None), F.text)
+@headman_router.message(AddOrChangePost.type, F.text)
 async def headman_subjects(message: types.Message, state: FSMContext, session: AsyncSession):
     subs = await find_subjects(session)
     if (message.text in subs):
@@ -116,10 +103,10 @@ async def headman_subjects(message: types.Message, state: FSMContext, session: A
                 await state.update_data(subject_id=s.id)
                 await state.set_state(AddOrChangePost.subject_id)
         
-        await message.answer("Введите описание материала", reply_markup=CANCEL_KB)
+        await message.answer("Введите описание", reply_markup=CANCEL_KB)
     else:
-        # print('ТЫ ДУРАК')
         pass
+
 
 
 # Ловим данные для состояния subject и потом меняем состояние на text
@@ -127,20 +114,13 @@ async def headman_subjects(message: types.Message, state: FSMContext, session: A
 async def add_text(message: types.Message, state: FSMContext):
     await state.update_data(text=message.text)
     await state.set_state(AddOrChangePost.text)
-#     await message.answer("Введите дедлайн в формате: 01.01.2001")
-
-# # Ловим данные для состояния text и потом меняем состояние на deadline
-# @headman_router.message(AddOrChangePost.text, F.text)
-# async def add_deadline(message: types.Message, state: FSMContext):
-#     await state.update_data(deadline=datetime.datetime.strptime(message.text, '%d.%m.%Y'))
-#     await state.set_state(AddOrChangePost.deadline)
+    # if (AddOrChangePost.type == "требования"):
+    #     state.set_state(AddOrChangePost.deadline)
     await message.answer("Приложите фото или файл", reply_markup=SKIP_KB)
 
-
-# Ловим данные для ссостояния deadline и потом меняем состояние на material
+# Ловим данные для состояния text и потом меняем состояние на material
 @headman_router.message(AddOrChangePost.text, or_f(F.photo, F.document, F.text))
-async def add_material(message: types.Message, state: FSMContext, session: AsyncSession):
-
+async def add_material(message: types.Message, state: FSMContext):
 
     if message.document:
         await state.update_data(material=message.document.file_id)
@@ -153,8 +133,14 @@ async def add_material(message: types.Message, state: FSMContext, session: Async
         await message.answer("Выберите следующий шаг", reply_markup=HEADMAN_KB)
         return
     await state.set_state(AddOrChangePost.material)
+    await message.answer("Введите дедлайн в формате: 01.01.2001", reply_markup=CANCEL_KB)
 
-
+# Ловим данные для состояния material и потом меняем состояние на deadline
+@headman_router.message(AddOrChangePost.material, F.text)
+async def add_deadline(message: types.Message, state: FSMContext, session: AsyncSession):
+    await state.update_data(deadline=datetime.datetime.strptime(message.text, '%d.%m.%Y'))
+    await state.set_state(AddOrChangePost.deadline)
+    
     data = await state.get_data() 
 
     print(data)
@@ -174,3 +160,4 @@ async def add_material(message: types.Message, state: FSMContext, session: Async
             reply_markup=HEADMAN_KB,
         )
     await state.clear()
+

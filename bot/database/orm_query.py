@@ -3,16 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models import Post, Users, Subject, Semestr, Group
 
-async def orm_add_user(session: AsyncSession, data: dict):
-    obj = Users(
-        telegram_id=data["telegram_id"],
-        username=data["username"],
-        full_name=data["full_name"],
-        groupe=data["groupe"],
-        codeName=data["codeName"]
-    )
-    session.add(obj)
-    await session.commit()
+
 
 async def orm_delete_user(session: AsyncSession, user_id: int):
     query = delete(Users).where(Users.telegram_id == user_id)
@@ -30,6 +21,14 @@ async def orm_get_code_name(session: AsyncSession, code_name: int):
     return result.scalar()
 
 # ADD
+async def orm_add_user(session: AsyncSession, data: dict):
+    obj = Users(
+        telegram_id=data["telegram_id"],
+        group_id=data["group_id"],
+    )
+    session.add(obj)
+    await session.commit()
+
 async def orm_add_post(session: AsyncSession, data: dict):
     print("0")
     if (('deadline' in data) & ('material' in data)):
@@ -52,7 +51,8 @@ async def orm_add_post(session: AsyncSession, data: dict):
             text=data["text"],
             deadline = d,
             subject_id=data["subject_id"],
-            material = m
+            material = m,
+            type = data["type"],
         )
     session.add(obj)
     await session.commit()

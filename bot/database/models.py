@@ -18,6 +18,7 @@ class Post(Base):
     subject_id: Mapped[int] = mapped_column(ForeignKey('subject.id', ondelete='CASCADE'), nullable=False)
     subject: Mapped['Subject'] = relationship(backref='post')
     material: Mapped[str] = mapped_column(String(150), nullable=True)
+    type: Mapped[str] = mapped_column(String(10), nullable=True)
 
 class Users(Base):
     __tablename__ = 'users'
