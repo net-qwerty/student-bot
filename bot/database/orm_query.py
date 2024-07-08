@@ -3,7 +3,21 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models import Post, Users, Subject, Semestr, Group
 
+<<<<<<< HEAD
 
+=======
+## Users
+
+async def orm_add_user(session: AsyncSession, data: dict):
+    obj = Users(
+        telegram_id=data["telegram_id"],
+        username=data["username"],
+        full_name=data["full_name"],
+        group_id=data["group_id"],
+    )
+    session.add(obj)
+    await session.commit()
+>>>>>>> db6606768cb618dccba6509d588299919331b9ad
 
 async def orm_delete_user(session: AsyncSession, user_id: int):
     query = delete(Users).where(Users.telegram_id == user_id)
@@ -15,10 +29,18 @@ async def orm_get_user(session: AsyncSession, user_id: int):
     result = await session.execute(query)
     return result.scalar()
 
-async def orm_get_code_name(session: AsyncSession, code_name: int):
-    query = select(Users).where(Users.codeName == code_name)
+## Group
+
+async def orm_get_group_atr(session: AsyncSession, attr_name: None, attr_value: None):
+    query = select(Group).where(getattr(Group, attr_name) == attr_value)
     result = await session.execute(query)
     return result.scalar()
+
+async def orm_get_semestr_name(session: AsyncSession, number: None, group_id: None):
+    query = select(Semestr).where(Semestr.number == number,Semestr.group_id == group_id)
+    result = await session.execute(query)
+    return result.scalar()
+
 
 # ADD
 async def orm_add_user(session: AsyncSession, data: dict):
@@ -61,6 +83,7 @@ async def orm_add_subject(session: AsyncSession, data: dict):
     obj = Subject(
         name=data["name"],
         semestr_id=data["semestr_id"],
+        # semestr=data["semestr"],
     )
     session.add(obj)
     await session.commit()
@@ -68,8 +91,9 @@ async def orm_add_subject(session: AsyncSession, data: dict):
 async def orm_add_semestr(session: AsyncSession, data: dict):
     obj = Semestr(
         number=data["number"],
-        subjects=data["subjects"],
+        # subjects=data["subjects"],
         group_id=data["group_id"],
+        # group=data["group"],
     )
     session.add(obj)
     await session.commit()
@@ -80,6 +104,7 @@ async def orm_add_group(session: AsyncSession, data: dict):
         codeName=data["codeName"],
         headmanID=data["headmanID"],
         notificationInterval=data["notificationInterval"],
+        currentSemester=data["currentSemester"],
     )
     session.add(obj)
     await session.commit()

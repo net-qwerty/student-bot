@@ -6,6 +6,7 @@ import settings
 
 from middlewares.db import DataBaseSession
 from middlewares.auth_student import AuthStudent
+from middlewares.auth_headman import AuthHeadman
 
 from database.engine import create_db, drop_db, session_maker
 
@@ -23,18 +24,19 @@ bot = Bot(token=settings.TOKEN, default=DefaultBotProperties(parse_mode=ParseMod
 dp = Dispatcher()
 
 student_router.message.middleware(AuthStudent(session_pool=session_maker))
+headman_router.message.middleware(AuthHeadman(session_pool=session_maker))
 
 # dp.include_router(admin_router)
 dp.include_router(user_private_router)
-dp.include_router(headman_router)
 dp.include_router(student_router)
+dp.include_router(headman_router)
 
 async def on_startup(bot):
     print("Bot started")
-    #run_param = False
-    #if run_param:
+    # run_param = False
+    # if run_param:
     #    await drop_db()
-    #Пока всегда дропаем бд при перезапуске (для отладки)
+    # # Пока всегда дропаем бд при перезапуске (для отладки)
     await drop_db()
 
     await create_db()
