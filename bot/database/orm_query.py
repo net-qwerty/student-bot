@@ -3,9 +3,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models import Post, Users, Subject, Semestr, Group
 
-<<<<<<< HEAD
-
-=======
 ## Users
 
 async def orm_add_user(session: AsyncSession, data: dict):
@@ -17,7 +14,6 @@ async def orm_add_user(session: AsyncSession, data: dict):
     )
     session.add(obj)
     await session.commit()
->>>>>>> db6606768cb618dccba6509d588299919331b9ad
 
 async def orm_delete_user(session: AsyncSession, user_id: int):
     query = delete(Users).where(Users.telegram_id == user_id)
