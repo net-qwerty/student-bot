@@ -40,6 +40,13 @@ async def menu_cmd(message: types.Message):
     """
     await message.answer(f"Ваш ID: <code>{message.from_user.id}</code>")
 
+@user_private_router.message(Command("chat_id"))
+async def menu_cmd(message: types.Message):
+    """
+    Get Chat ID user
+    """
+    await message.answer(f"Ваш ChatID: <code>{message.chat.id}</code>")
+
 
 @user_private_router.message(or_f((CommandStart()), Command("start"), (F.text.lower().contains("start"))))
 async def start_main(message: types.Message):
