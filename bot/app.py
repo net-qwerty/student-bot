@@ -28,8 +28,8 @@ headman_router.message.middleware(AuthHeadman(session_pool=session_maker))
 
 # dp.include_router(admin_router)
 dp.include_router(user_private_router)
-dp.include_router(headman_router)
 dp.include_router(student_router)
+dp.include_router(headman_router)
 
 async def on_startup(bot):
     print("Bot started")
