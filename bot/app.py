@@ -15,7 +15,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.client.bot import DefaultBotProperties
 from aiogram.enums import ParseMode
 # from handlers.admin_private import admin_router
-from handlers.student import student_router
+from handlers.student import (student_router, scheduler)
 from handlers.headman import headman_router
 from handlers.user_private import user_private_router
 
@@ -40,6 +40,7 @@ async def on_startup(bot):
     await drop_db()
 
     await create_db()
+    asyncio.create_task(scheduler(bot))
 
 
 async def on_shutdown(bot):
