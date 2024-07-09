@@ -24,14 +24,7 @@ from database.orm_query import (
 user_private_router = Router()
 user_private_router.message.filter(ChatTypeFilter(["private"]))
 
-STUDENT_KB = get_keyboard(
-    ["Информация",
-    "Материалы",
-    "Требования",
-    "Переключить семестр"],
-    placeholder="Выберите",
-    sizes=(2,),
-)
+CANCEL_KB=get_keyboard(["Отмена",], placeholder="Выберите", sizes=(2,),)
 
 @user_private_router.message(Command("id"))
 async def menu_cmd(message: types.Message):
@@ -120,7 +113,7 @@ class CreateGroup(StatesGroup):
     
     callback = State()
 
-@user_private_router.callback_query(StateFilter(None), F.data.startswith("create_group"))
+@user_private_router.callback_query(StateFilter(None), F.data == "create_group")
 async def registration_student(callback: types.CallbackQuery, state: FSMContext, session: AsyncSession):
     """
     Регистрация студента и создание группы
@@ -133,8 +126,8 @@ async def registration_student(callback: types.CallbackQuery, state: FSMContext,
 
 #Хендлер отмены и сброса состояния должен быть всегда именно здесь,
 #после того как только встали в состояние номер 1 (элементарная очередность фильтров)
-@user_private_router.message(StateFilter('*'), Command("отмена"))
-@user_private_router.message(StateFilter('*'), F.text.casefold() == "отмена")
+@user_private_router.message(StateFilter('*'), Command("отмен"))
+@user_private_router.message(StateFilter('*'), F.text.casefold() == "отмен")
 async def cancel_handler(message: types.Message, state: FSMContext) -> None:
 
     current_state = await state.get_state()
@@ -157,7 +150,7 @@ async def add_name(message: types.Message, state: FSMContext, session: AsyncSess
 
     await state.update_data(name_group=message.text)
 
-    await message.answer("Введите код для вашей группы")
+    await message.answer("Введите код для вашей группы",reply_markup=CANCEL_KB)
 
     await state.set_state(CreateGroup.code_group)
 
@@ -173,7 +166,7 @@ async def add_name(message: types.Message, state: FSMContext, session: AsyncSess
     
     await state.update_data(code_name_group=message.text)
 
-    await message.answer("Номер текущего семестра")
+    await message.answer("Номер текущего семестра", reply_markup=CANCEL_KB)
 
     await state.set_state(CreateGroup.semestr_group)
 
@@ -185,7 +178,7 @@ async def add_name(message: types.Message, state: FSMContext):
     """
     await state.update_data(semestr_group=message.text)
 
-    await message.answer("Введите интервал уведомлений(в днях)")
+    await message.answer("Введите интервал уведомлений(в днях)", reply_markup=CANCEL_KB)
 
     await state.set_state(CreateGroup.notification_interval)
 
@@ -198,7 +191,8 @@ async def add_name(message: types.Message, state: FSMContext):
     await state.update_data(notification_interval=message.text)
     await state.update_data(subjects_group=[])
 
-    await message.answer("Введите название предметов по одному или напишите <strong>Пропустить</strong>")
+    await message.answer("Введите название предметов по одному или напишите <strong>Пропустить</strong>",
+                         reply_markup=get_keyboard(["Пропустить", "Отмена"], placeholder="Выберите", sizes=(2,),))
 
     await state.set_state(CreateGroup.subjects_group)
 
@@ -211,10 +205,12 @@ async def add_name(message: types.Message, state: FSMContext, session):
     data = await state.get_data()
 
     if not "завершить" in message.text.lower() and not "пропустить" in message.text.lower():
-        await message.answer("Введите ещё предмет или введите <strong>завершить</strong>")
+        await message.answer("Введите ещё предмет или нажмите <strong>завершить</strong>", 
+                             reply_markup=get_keyboard(["Завершить", "Отмена"], placeholder="Выберите", sizes=(2,),))
         data["subjects_group"].append(message.text)
         return
-    
+
+    # add group
     data_group = {
         "name": data["name_group"],
         "codeName": data["code_name_group"],
@@ -227,6 +223,7 @@ async def add_name(message: types.Message, state: FSMContext, session):
     
     group = await orm_get_group_atr(session, "codeName", data['code_name_group'])
     
+    # add user if not
     if not await orm_get_user(session, int(message.from_user.id)):
         
         user = {
@@ -239,7 +236,7 @@ async def add_name(message: types.Message, state: FSMContext, session):
         await orm_add_user(session, user)
     
     
-    
+    # add semestr
     semestr = {
         "number": int(data["semestr_group"]),
         "group_id": group.id,
@@ -250,16 +247,14 @@ async def add_name(message: types.Message, state: FSMContext, session):
 
     semestr = await orm_get_semestr_name(session, int(data["semestr_group"]), group.id)
 
-    print(semestr.id)
-    print(data["subjects_group"])
-    # for subject in data["subjects_group"]:
-    #     subject = {
-    #         "name": subject,
-    #         "semestr_id": semestr.id,
-    #     }
+    # add subject
+    for subject in data["subjects_group"]:
+        subject = {
+            "name": subject,
+            "semestr_id": semestr.id,
+        }
         
-    #     await orm_add_subject(session, semestr)
-    
+        await orm_add_subject(session, subject)
     
     await message.answer("Группа создана!", reply_markup=AUTH_KB)
     await state.clear()
