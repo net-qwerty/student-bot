@@ -3,28 +3,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models import Post, Users, Subject, Semestr, Group
 
-## Users
-
-async def orm_add_user(session: AsyncSession, data: dict):
-    obj = Users(
-        telegram_id=data["telegram_id"],
-        username=data["username"],
-        full_name=data["full_name"],
-        group_id=data["group_id"],
-    )
-    session.add(obj)
-    await session.commit()
-
-async def orm_delete_user(session: AsyncSession, user_id: int):
-    query = delete(Users).where(Users.telegram_id == user_id)
-    await session.execute(query)
-    await session.commit()
-
-async def orm_get_user(session: AsyncSession, user_id: int):
-    query = select(Users).where(Users.telegram_id == user_id)
-    result = await session.execute(query)
-    return result.scalar()
-
 ## Group
 
 async def orm_get_group_atr(session: AsyncSession, attr_name: None, attr_value: None):
@@ -42,6 +20,8 @@ async def orm_get_semestr_name(session: AsyncSession, number: None, group_id: No
 async def orm_add_user(session: AsyncSession, data: dict):
     obj = Users(
         telegram_id=data["telegram_id"],
+        username=data["username"],
+        full_name=data["full_name"],
         group_id=data["group_id"],
     )
     session.add(obj)
@@ -158,6 +138,11 @@ async def orm_get_group(session: AsyncSession, group_id: int):
     result = await session.execute(query)
     return result.scalar()
 
+async def orm_get_user(session: AsyncSession, user_id: int):
+    query = select(Users).where(Users.telegram_id == user_id)
+    result = await session.execute(query)
+    return result.scalar()
+
 
 
 # UPDATE
@@ -218,5 +203,10 @@ async def orm_delete_semestr(session: AsyncSession, semestr_id: int):
 
 async def orm_delete_group(session: AsyncSession, group_id: int):
     query = delete(Group).where(Group.id == group_id)
+    await session.execute(query)
+    await session.commit()
+
+async def orm_delete_user(session: AsyncSession, user_id: int):
+    query = delete(Users).where(Users.telegram_id == user_id)
     await session.execute(query)
     await session.commit()
