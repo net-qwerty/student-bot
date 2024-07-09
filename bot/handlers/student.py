@@ -51,12 +51,3 @@ async def student_main(message: types.Message, user):
     Main student
     """
     await message.answer("Меню", reply_markup=STUDENT_KB)
-
-async def boo(bot: Bot):
-    await bot.send_message(chat_id = 635260494, text="Бу!")
-
-async def scheduler(bot: Bot):
-    aioschedule.every().day.at("22:49").do(boo, bot)
-    while True:
-        await aioschedule.run_pending()
-        await asyncio.sleep(1)
