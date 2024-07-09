@@ -46,8 +46,9 @@ STUDENT_KB = get_keyboard(
 
 
 @student_router.message(or_f(Command("student"), (F.text.lower().contains("студент"))))
-async def student_main(message: types.Message, user):
+async def student_main(message: types.Message, user, group):
     """
     Main student
     """
+    await message.answer(f"Пользователь @{user.username} - {user.full_name}\nТекущий семестр: {group.currentSemester}")
     await message.answer("Меню", reply_markup=STUDENT_KB)
