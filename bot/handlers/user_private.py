@@ -198,7 +198,7 @@ async def add_name(message: types.Message, state: FSMContext):
 
 
 @user_private_router.message(CreateGroup.subjects_group, F.text)
-async def add_name(message: types.Message, state: FSMContext, session):
+async def add_name(message: types.Message, state: FSMContext, session: AsyncSession):
     """
     Создание группы. Задаём предметы, завершаем FSM.
     """
