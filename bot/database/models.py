@@ -25,8 +25,8 @@ class Users(Base):
     __tablename__ = 'users'
 
     telegram_id: Mapped[int] = mapped_column(nullable=False)
-    # username: Mapped[str] = mapped_column(String(255), nullable=False)
-    # full_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    username: Mapped[str] = mapped_column(String(255), nullable=False)
+    full_name: Mapped[str] = mapped_column(String(255), nullable=False)
     group_id: Mapped[int] = mapped_column(ForeignKey('group.id', ondelete='CASCADE'), nullable=False)
     group: Mapped['Group'] = relationship(backref='users')
 
