@@ -23,8 +23,8 @@ bot = Bot(token=settings.TOKEN, default=DefaultBotProperties(parse_mode=ParseMod
 
 dp = Dispatcher()
 
-student_router.message.middleware(AuthStudent(session_pool=session_maker))
-headman_router.message.middleware(AuthHeadman(session_pool=session_maker))
+# student_router.message.middleware(AuthStudent(session_pool=session_maker))
+# headman_router.message.middleware(AuthHeadman(session_pool=session_maker))
 
 # dp.include_router(admin_router)
 dp.include_router(user_private_router)

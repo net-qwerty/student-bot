@@ -111,16 +111,19 @@ async def headman_subjects(message: types.Message, state: FSMContext, session: A
 
 # Ловим данные для состояния subject и потом меняем состояние на text
 @headman_router.message(AddOrChangePost.subject_id, F.text)
-async def add_text(message: types.Message, state: FSMContext):
+async def add_text(message: types.Message, state: FSMContext, session: AsyncSession):
     await state.update_data(text=message.text)
-    await state.set_state(AddOrChangePost.text)
-    # if (AddOrChangePost.type == "требования"):
-    #     state.set_state(AddOrChangePost.deadline)
-    await message.answer("Приложите фото или файл", reply_markup=SKIP_KB)
+    data = await state.get_data() 
+    print(data["type"])
+    if (data["type"] == "Требования"):
+        await save_post(message, state, session)
+    else:
+        await state.set_state(AddOrChangePost.text)
+        await message.answer("Приложите фото или файл", reply_markup=SKIP_KB)
 
 # Ловим данные для состояния text и потом меняем состояние на material
 @headman_router.message(AddOrChangePost.text, or_f(F.photo, F.document, F.text))
-async def add_material(message: types.Message, state: FSMContext):
+async def add_material(message: types.Message, state: FSMContext, session: AsyncSession):
 
     if message.document:
         await state.update_data(material=message.document.file_id)
@@ -132,21 +135,29 @@ async def add_material(message: types.Message, state: FSMContext):
         await state.clear()
         await message.answer("Выберите следующий шаг", reply_markup=HEADMAN_KB)
         return
-    await state.set_state(AddOrChangePost.material)
-    await message.answer("Введите дедлайн в формате: 01.01.2001", reply_markup=CANCEL_KB)
+    
+    data = await state.get_data() 
+    print(data["type"])
+    if (data["type"] == "Материалы"):
+        await save_post(message, state, session)
+    else:
+        await state.set_state(AddOrChangePost.material)
+        await message.answer("Введите дедлайн в формате: 01.01.2001", reply_markup=CANCEL_KB)
 
 # Ловим данные для состояния material и потом меняем состояние на deadline
 @headman_router.message(AddOrChangePost.material, F.text)
 async def add_deadline(message: types.Message, state: FSMContext, session: AsyncSession):
     await state.update_data(deadline=datetime.datetime.strptime(message.text, '%d.%m.%Y'))
     await state.set_state(AddOrChangePost.deadline)
+    await save_post(message, state, session)
+
+
+async def save_post(message: types.Message, state: FSMContext, session: AsyncSession):
     
     data = await state.get_data() 
-
     print(data)
     # await message.answer(f"Вы ввели:\n{data["subject"]}\n{data["text"]}\n{data["deadline"]}\n{data["material"]}", reply_markup=HEADMAN_KB)
 
-    
     try:
         await orm_add_post(session, data)
         
