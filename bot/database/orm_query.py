@@ -104,6 +104,12 @@ async def orm_get_subject_all(session: AsyncSession):
     result = await session.execute(query)
     return result.scalars().all()
 
+async def orm_get_subjects_by_group (session: AsyncSession, group_id: int):
+    query = select(Subject).where(Subject.semestr_id == Semestr.id).where(Semestr.group_id == group_id)
+    result = await session.execute(query)
+    await session.close()
+    return result.scalars().all()
+
 async def orm_get_semestr_all(session: AsyncSession):
     query = select(Semestr)
     result = await session.execute(query)

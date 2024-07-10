@@ -14,7 +14,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.orm_query import (
     orm_add_post,
-    orm_get_subject_all
+    # orm_get_subject_all
+    orm_get_subjects_by_group
 )
 
 headman_router = Router()
@@ -62,18 +63,19 @@ async def headman_main(message: types.Message):
     await message.answer("Выберите следующий шаг", reply_markup=HEADMAN_KB)
 
 # сборка массива предметов
-async def find_subjects(session: AsyncSession):
+async def find_subjects(session: AsyncSession, group):
     subjects = []
-    for s in await orm_get_subject_all(session):
+    # for s in await orm_get_subject_all(session):
+    for s in await orm_get_subjects_by_group(session, group.id):
         subjects.append(s.name)
     return subjects  
 
 # -------------------------------------------------------------
 
 @headman_router.message(StateFilter(None), or_f(F.text.lower().contains("информация"), F.text.lower().contains("материалы"), F.text.lower().contains("требования")))
-async def headman_information(message: types.Message, state: FSMContext, session: AsyncSession):
+async def headman_information(message: types.Message, state: FSMContext, session: AsyncSession, group):
     
-    subs = await find_subjects(session)
+    subs = await find_subjects(session, group)
     if (message.text.lower() == "требования"):
         subs.remove("Общее")
    
@@ -95,10 +97,11 @@ async def back_information(message: types.Message, state: FSMContext):
 # ------------------------ FSM для материалов
 
 @headman_router.message(AddOrChangePost.type, F.text)
-async def headman_subjects(message: types.Message, state: FSMContext, session: AsyncSession):
-    subs = await find_subjects(session)
+async def headman_subjects(message: types.Message, state: FSMContext, session: AsyncSession, group):
+    subs = await find_subjects(session, group)
     if (message.text in subs):
-        for s in await orm_get_subject_all(session):
+        # for s in await orm_get_subject_all(session):
+        for s in await orm_get_subjects_by_group(session, group.id):
             if(s.name == message.text):
                 await state.update_data(subject_id=s.id)
                 await state.set_state(AddOrChangePost.subject_id)
@@ -142,14 +145,22 @@ async def add_material(message: types.Message, state: FSMContext, session: Async
         await save_post(message, state, session)
     else:
         await state.set_state(AddOrChangePost.material)
-        await message.answer("Введите дедлайн в формате: 01.01.2001", reply_markup=CANCEL_KB)
+        await message.answer("Введите дедлайн в формате: 01.01.2001", reply_markup=SKIP_KB)
 
 # Ловим данные для состояния material и потом меняем состояние на deadline
 @headman_router.message(AddOrChangePost.material, F.text)
 async def add_deadline(message: types.Message, state: FSMContext, session: AsyncSession):
-    await state.update_data(deadline=datetime.datetime.strptime(message.text, '%d.%m.%Y'))
-    await state.set_state(AddOrChangePost.deadline)
-    await save_post(message, state, session)
+
+    if message.text != "Пропустить":
+        await state.update_data(deadline=datetime.datetime.strptime(message.text, '%d.%m.%Y'))
+        await state.set_state(AddOrChangePost.deadline)
+        await save_post(message, state, session)
+    elif message.text == "Пропустить":
+        await save_post(message, state, session)
+    else:
+        await state.clear()
+        await message.answer("Выберите следующий шаг", reply_markup=HEADMAN_KB)
+        return
 
 
 async def save_post(message: types.Message, state: FSMContext, session: AsyncSession):

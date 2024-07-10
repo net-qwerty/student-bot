@@ -248,6 +248,9 @@ async def add_name(message: types.Message, state: FSMContext, session: AsyncSess
     semestr = await orm_get_semestr_name(session, int(data["semestr_group"]), group.id)
 
     # add subject
+
+    await orm_add_subject(session, {"name": "Общее", "semestr_id": semestr.id,})
+
     for subject in data["subjects_group"]:
         subject = {
             "name": subject,

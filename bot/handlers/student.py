@@ -1,5 +1,4 @@
 import asyncio
-import aioschedule
 import settings
 from aiogram import Bot, F, Router, types
 from aiogram.filters import Command, CommandStart, StateFilter, or_f
