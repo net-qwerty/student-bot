@@ -90,11 +90,13 @@ async def orm_add_group(session: AsyncSession, data: dict):
 async def orm_get_post_all(session: AsyncSession):
     query = select(Post)
     result = await session.execute(query)
+    await session.close()
     return result.scalars().all()
 
 async def orm_get_posts_by_group (session: AsyncSession, group_id: int):
     query = select(Post).where(Post.subject_id == Subject.id).where(Subject.semestr_id == Semestr.id).where(Semestr.group_id == group_id)
     result = await session.execute(query)
+    await session.close()
     return result.scalars().all()
 
 async def orm_get_subject_all(session: AsyncSession):
@@ -110,11 +112,13 @@ async def orm_get_semestr_all(session: AsyncSession):
 async def orm_get_group_all(session: AsyncSession):
     query = select(Group)
     result = await session.execute(query)
+    await session.close()
     return result.scalars().all()
 
 async def orm_get_users_by_group (session: AsyncSession, group_id: int):
     query = select(Users).where(Users.group_id == group_id)
     result = await session.execute(query)
+    await session.close()
     return result.scalars().all()
 
 # ADD BY ID

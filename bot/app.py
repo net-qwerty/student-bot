@@ -10,13 +10,13 @@ from middlewares.auth_headman import AuthHeadman
 
 from database.engine import create_db, drop_db, session_maker
 
-
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from aiogram import Bot, Dispatcher
 from aiogram.client.bot import DefaultBotProperties
 from aiogram.enums import ParseMode
 # from handlers.admin_private import admin_router
 from handlers.student import student_router
-from notifications.notifications import scheduler
+from notifications.notifications import schedule_bot
 from handlers.headman import headman_router
 from handlers.user_private import user_private_router
 
@@ -41,7 +41,8 @@ async def on_startup(bot):
     await drop_db()
 
     await create_db()
-    asyncio.create_task(scheduler(bot))
+
+    await schedule_bot(AsyncIOScheduler(timezone='Europe/Moscow'),bot)
 
 
 async def on_shutdown(bot):
