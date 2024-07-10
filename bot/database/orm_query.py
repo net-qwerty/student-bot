@@ -121,7 +121,7 @@ async def orm_get_group_all(session: AsyncSession):
     await session.close()
     return result.scalars().all()
 
-async def orm_get_users_by_group (session: AsyncSession, group_id: int):
+async def orm_get_users_by_group(session: AsyncSession, group_id: int):
     query = select(Users).where(Users.group_id == group_id)
     result = await session.execute(query)
     await session.close()

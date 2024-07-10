@@ -1,4 +1,4 @@
-from aiogram import F, Router, types
+from aiogram import F, Router, types, Bot
 from aiogram.filters import Command, CommandStart, StateFilter, or_f
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
@@ -18,6 +18,7 @@ from database.orm_query import (
     orm_add_semestr,
     orm_add_subject,
     orm_get_semestr_name,
+    orm_get_group_all
 )
 
 
@@ -26,12 +27,6 @@ user_private_router.message.filter(ChatTypeFilter(["private"]))
 
 CANCEL_KB=get_keyboard(["Отмена",], placeholder="Выберите", sizes=(2,),)
 
-@user_private_router.message(Command("id"))
-async def menu_cmd(message: types.Message):
-    """
-    Get ID user
-    """
-    await message.answer(f"Ваш ID: <code>{message.from_user.id}</code>")
 
 @user_private_router.message(Command("chat_id"))
 async def menu_cmd(message: types.Message):
@@ -42,10 +37,18 @@ async def menu_cmd(message: types.Message):
 
 
 @user_private_router.message(or_f((CommandStart()), Command("start"), (F.text.lower().contains("start"))))
-async def start_main(message: types.Message):
+async def start_main(message: types.Message, bot: Bot, session: AsyncSession):
     """
     Auth menu
     """
+    groups = await orm_get_group_all(session)
+
+    headmans_list = [
+        group.headmanID
+        for group in groups
+    ]
+
+    bot.headmans_list = headmans_list
     await message.answer("Привет!\nЭтот бот предназначен для помощи в учебе.\nВыберите роль, под которой хотите авторизоваться", reply_markup=AUTH_KB)
 
 class RegistrationStudent(StatesGroup):
@@ -113,12 +116,12 @@ class CreateGroup(StatesGroup):
     
     callback = State()
 
-@user_private_router.callback_query(StateFilter(None), F.data == "create_group")
-async def registration_student(callback: types.CallbackQuery, state: FSMContext, session: AsyncSession):
+@user_private_router.message(StateFilter(None), Command("create_group"))
+async def registration_student(message: types.Message, state: FSMContext, session: AsyncSession):
     """
     Регистрация студента и создание группы
     """
-    await callback.message.answer(
+    await message.answer(
         "Введите номер группы", reply_markup=types.ReplyKeyboardRemove()
     )
 
@@ -198,7 +201,7 @@ async def add_name(message: types.Message, state: FSMContext):
 
 
 @user_private_router.message(CreateGroup.subjects_group, F.text)
-async def add_name(message: types.Message, state: FSMContext, session: AsyncSession):
+async def add_name(message: types.Message, bot: Bot,state: FSMContext, session: AsyncSession):
     """
     Создание группы. Задаём предметы, завершаем FSM.
     """
@@ -258,6 +261,15 @@ async def add_name(message: types.Message, state: FSMContext, session: AsyncSess
         }
         
         await orm_add_subject(session, subject)
+    
+    groups = await orm_get_group_all(session)
+
+    headmans_list = [
+        group.headmanID
+        for group in groups
+    ]
+
+    bot.headmans_list = headmans_list
     
     await message.answer("Группа создана!", reply_markup=AUTH_KB)
     await state.clear()

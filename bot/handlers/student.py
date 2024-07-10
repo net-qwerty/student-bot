@@ -14,7 +14,7 @@ from kbds.reply import get_keyboard, AUTH_KB
 
 
 student_router = Router()
-student_router.message.filter(ChatTypeFilter(["private"]))
+student_router.message.filter(ChatTypeFilter(["private"]), IsStudent())
 
 
 env = Environment(loader=FileSystemLoader("bot/templates/"), lstrip_blocks=True)

@@ -27,6 +27,7 @@ dp = Dispatcher()
 student_router.message.middleware(AuthStudent(session_pool=session_maker))
 headman_router.message.middleware(AuthHeadman(session_pool=session_maker))
 
+bot.headmans_list = []
 
 dp.include_router(user_private_router)
 dp.include_router(student_router)

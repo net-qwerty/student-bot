@@ -24,4 +24,17 @@ class IsStudent(Filter):
         pass
 
     async def __call__(self, message: types.Message, bot: Bot) -> bool:
-        return message.from_user.id in bot.netops_list
+    
+        return message.from_user.id not in bot.headmans_list
+
+class IsHeadman(Filter):
+    """
+    Filter for authorization of a user from the list telegram ID
+    """
+
+    def __init__(self) -> None:
+        pass
+
+    async def __call__(self, message: types.Message, bot: Bot) -> bool:
+    
+        return message.from_user.id in bot.headmans_list

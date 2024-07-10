@@ -4,7 +4,8 @@ from aiogram import Bot, F, Router, types
 from aiogram.filters import Command, CommandStart, StateFilter, or_f
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from filters.chat_types import ChatTypeFilter
+
+from filters.chat_types import ChatTypeFilter, IsHeadman
 from jinja2 import Environment, FileSystemLoader
 
 from kbds.inline import get_callback_btns
@@ -15,11 +16,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from database.orm_query import (
     orm_add_post,
     # orm_get_subject_all
-    orm_get_subjects_by_group
+    orm_get_subjects_by_group,
+    orm_get_group_all
 )
 
 headman_router = Router()
-headman_router.message.filter(ChatTypeFilter(["private"]))
+headman_router.message.filter(ChatTypeFilter(["private"]), IsHeadman())
 
 env = Environment(loader=FileSystemLoader("bot/templates/"), lstrip_blocks=True)
 
