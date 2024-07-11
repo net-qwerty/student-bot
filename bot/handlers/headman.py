@@ -21,7 +21,8 @@ from database.orm_query import (
 )
 
 headman_router = Router()
-headman_router.message.filter(ChatTypeFilter(["private"]), IsHeadman())
+# headman_router.message.filter(ChatTypeFilter(["private"]), IsHeadman())
+headman_router.message.filter(ChatTypeFilter(["private"]))
 
 env = Environment(loader=FileSystemLoader("bot/templates/"), lstrip_blocks=True)
 
@@ -60,7 +61,7 @@ class AddOrChangePost(StatesGroup):
         "AddOrChangePost:material": "Приложиите материал",
     }
 
-@headman_router.message(or_f(Command("headman"), F.text.lower().contains("староста")))
+@headman_router.message(or_f(Command("headman"), F.text.contains("Староста")))
 async def headman_main(message: types.Message):
     await message.answer("Выберите следующий шаг", reply_markup=HEADMAN_KB)
 
@@ -72,13 +73,13 @@ async def find_subjects(session: AsyncSession, group):
         subjects.append(s.name)
     return subjects  
 
-# -------------------------------------------------------------
+# ------------------------------------------------------------- FSM 
 
-@headman_router.message(StateFilter(None), or_f(F.text.lower().contains("информация"), F.text.lower().contains("материалы"), F.text.lower().contains("требования")))
+@headman_router.message(StateFilter(None), or_f(F.text.contains("Информация"), F.text.contains("Материалы"), F.text.contains("Требования")))
 async def headman_information(message: types.Message, state: FSMContext, session: AsyncSession, group):
     
     subs = await find_subjects(session, group)
-    if (message.text.lower() == "требования"):
+    if (message.text == "Требования"):
         subs.remove("Общее")
    
     SUBJECT_KB = get_keyboard(
@@ -91,12 +92,11 @@ async def headman_information(message: types.Message, state: FSMContext, session
 
 
 
-@headman_router.message(or_f(F.text.lower().contains("назад"), F.text.lower().contains("отменить")))
+@headman_router.message(or_f(F.text.contains("Назад"), F.text.contains("Отменить")))
 async def back_information(message: types.Message, state: FSMContext):
     await state.clear()
     await message.answer("Выберите следующий шаг", reply_markup=HEADMAN_KB)
 
-# ------------------------ FSM для материалов
 
 @headman_router.message(AddOrChangePost.type, F.text)
 async def headman_subjects(message: types.Message, state: FSMContext, session: AsyncSession, group):
