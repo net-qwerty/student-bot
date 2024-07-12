@@ -17,7 +17,7 @@ from database.orm_query import (
     orm_add_post,
     # orm_get_subject_all
     orm_get_subjects_by_group,
-    orm_get_group_all
+    orm_get_users_by_group
 )
 
 headman_router = Router()
@@ -116,19 +116,19 @@ async def headman_subjects(message: types.Message, state: FSMContext, session: A
 
 # Ловим данные для состояния subject и потом меняем состояние на text
 @headman_router.message(AddOrChangePost.subject_id, F.text)
-async def add_text(message: types.Message, state: FSMContext, session: AsyncSession):
+async def add_text(message: types.Message, state: FSMContext, session: AsyncSession, group):
     await state.update_data(text=message.text)
     data = await state.get_data() 
     print(data["type"])
     if (data["type"] == "Требования"):
-        await save_post(message, state, session)
+        await save_post(message, state, session, group)
     else:
         await state.set_state(AddOrChangePost.text)
         await message.answer("Приложите фото или файл", reply_markup=SKIP_KB)
 
 # Ловим данные для состояния text и потом меняем состояние на material
 @headman_router.message(AddOrChangePost.text, or_f(F.photo, F.document, F.text))
-async def add_material(message: types.Message, state: FSMContext, session: AsyncSession):
+async def add_material(message: types.Message, state: FSMContext, session: AsyncSession, group):
 
     if message.document:
         await state.update_data(material=message.document.file_id)
@@ -144,28 +144,28 @@ async def add_material(message: types.Message, state: FSMContext, session: Async
     data = await state.get_data() 
     print(data["type"])
     if (data["type"] == "Материалы"):
-        await save_post(message, state, session)
+        await save_post(message, state, session, group)
     else:
         await state.set_state(AddOrChangePost.material)
         await message.answer("Введите дедлайн в формате: 01.01.2001", reply_markup=SKIP_KB)
 
 # Ловим данные для состояния material и потом меняем состояние на deadline
 @headman_router.message(AddOrChangePost.material, F.text)
-async def add_deadline(message: types.Message, state: FSMContext, session: AsyncSession):
+async def add_deadline(message: types.Message, state: FSMContext, session: AsyncSession, group):
 
     if message.text != "Пропустить":
         await state.update_data(deadline=datetime.datetime.strptime(message.text, '%d.%m.%Y'))
         await state.set_state(AddOrChangePost.deadline)
-        await save_post(message, state, session)
+        await save_post(message, state, session, group)
     elif message.text == "Пропустить":
-        await save_post(message, state, session)
+        await save_post(message, state, session, group)
     else:
         await state.clear()
         await message.answer("Выберите следующий шаг", reply_markup=HEADMAN_KB)
         return
 
 
-async def save_post(message: types.Message, state: FSMContext, session: AsyncSession):
+async def save_post(message: types.Message, state: FSMContext, session: AsyncSession, group):
     
     data = await state.get_data() 
     print(data)
@@ -173,6 +173,8 @@ async def save_post(message: types.Message, state: FSMContext, session: AsyncSes
 
     try:
         await orm_add_post(session, data)
+        await publish_post(message, session, group.id, data)
+        
         
         await message.answer(
             f"<strong> Запись добавлена!</strong>",
@@ -185,3 +187,16 @@ async def save_post(message: types.Message, state: FSMContext, session: AsyncSes
         )
     await state.clear()
 
+async def publish_post(message: types.Message, session: AsyncSession, group_id: int, post: dict):
+    s = f"<i>Новый пост</i>\n\n" + post["text"]
+    if('deadline' in post):
+        s = s + f"<i>\n\nДедлайн: </i>" + datetime.datetime.strftime(post["deadline"], '%d.%m.%Y')
+    group_users = await orm_get_users_by_group(session, group_id)
+    for group_user in group_users:
+        if('material' in post):
+            try:
+                await message.bot.send_document(chat_id = group_user.telegram_id, document=post["material"], caption=s)
+            except Exception as e:
+                await message.bot.send_photo(chat_id = group_user.telegram_id, photo=post["material"], caption=s)
+        else:
+            await message.bot.send_message(chat_id = group_user.telegram_id, text=s)
