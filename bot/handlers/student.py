@@ -83,7 +83,7 @@ async def student_information(message: types.Message, state: FSMContext, session
         subs.remove("Общее")
    
     SUBJECT_KB = get_keyboard(
-        subs + ["Назад"],
+        subs + ["назад"],
         sizes=(2,),
         )
     await state.update_data(type=message.text)
@@ -114,14 +114,57 @@ async def student_subjects(message: types.Message, state: FSMContext, session: A
 async def get_posts(message: types.Message, state: FSMContext, session: AsyncSession, group_id: int):
     
     data = await state.get_data() 
-    # await message.answer(f"Вы ввели:\n{data["subject"]}\n{data["text"]}\n{data["deadline"]}\n{data["material"]}", reply_markup=STUDENT_KB)
-
     try:
+        i=0
         for post in await orm_get_posts_by_group(session, group_id):
-            await message.answer(post.text, reply_markup=STUDENT_KB)
+            if ((data["type"] == "требования") & (post.type == "Требования") & (post.subject_id == data["subject_id"])):
+                i=+1
+                await message.answer(f"{post.text}", reply_markup=STUDENT_KB)
+            elif ((data["type"] == "материалы") & (post.type == "Материалы") & (post.subject_id == data["subject_id"])):
+                if (post.material is not None):
+
+                    try:
+                        await message.answer_photo(post.material, caption=f"{post.text}\n", reply_markup=STUDENT_KB)
+                        i=+1
+                    except Exception as e:
+                        await message.answer_document(post.material, caption=f"{post.text}\n", reply_markup=STUDENT_KB)
+                        i=+1
+                else:
+                    i=+1
+                    await message.answer(f"{post.text}", reply_markup=STUDENT_KB)
+            elif ((data["type"] == "информация") & (post.type == "Информация") & (post.subject_id == data["subject_id"])):
+                if (post.material is not None):
+                        if (post.deadline is not None):
+                            try:
+                                await message.answer_photo(post.material, caption=f"{post.text}\n{post.deadline}", reply_markup=STUDENT_KB)
+                                i=+1
+                            except Exception as e:
+                                await message.answer_document(post.material, caption=f"{post.text}\n{post.deadline}", reply_markup=STUDENT_KB)
+                                i=+1
+                        else:
+                            try:
+                                await message.answer_photo(post.material, caption=f"{post.text}\n", reply_markup=STUDENT_KB)
+                                i=+1
+                            except Exception as e:
+                                await message.answer_document(post.material, caption=f"{post.text}\n", reply_markup=STUDENT_KB)
+                                i=+1
+                else:
+                    if (post.deadline is not None):
+                        i=+1
+                        await message.answer(f"{post.text}\n{post.deadline}", reply_markup=STUDENT_KB)
+                    else:
+                        i=+1
+                        await message.answer(f"{post.text}", reply_markup=STUDENT_KB)   
+            else:
+                pass
+        if (i==0):
+            await message.answer("Записи не найдены", reply_markup=STUDENT_KB)
+
     except Exception as e:
         await message.answer(
             f"Ошибка: \n{str(e)}\nОбратись к разработчикам",
             reply_markup=STUDENT_KB,
         )
     await state.clear()
+
+

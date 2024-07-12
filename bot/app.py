@@ -39,7 +39,7 @@ async def on_startup(bot):
     # if run_param:
     #    await drop_db()
     # # Пока всегда дропаем бд при перезапуске (для отладки)
-    await drop_db()
+    # await drop_db()
 
     await create_db()
 

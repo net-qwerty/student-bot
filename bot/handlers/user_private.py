@@ -181,7 +181,7 @@ async def add_name(message: types.Message, state: FSMContext):
     """
     await state.update_data(semestr_group=message.text)
 
-    await message.answer("Введите интервал уведомлений(в днях)", reply_markup=CANCEL_KB)
+    await message.answer("Введите интервал уведомлений (в днях)", reply_markup=CANCEL_KB)
 
     await state.set_state(CreateGroup.notification_interval)
 
@@ -194,7 +194,7 @@ async def add_name(message: types.Message, state: FSMContext):
     await state.update_data(notification_interval=message.text)
     await state.update_data(subjects_group=[])
 
-    await message.answer("Введите название предметов по одному или напишите <strong>Пропустить</strong>",
+    await message.answer("Введите название предметов по одному или выберите <strong>Пропустить</strong>",
                          reply_markup=get_keyboard(["Пропустить", "Отмена"], placeholder="Выберите", sizes=(2,),))
 
     await state.set_state(CreateGroup.subjects_group)
